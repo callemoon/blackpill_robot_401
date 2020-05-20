@@ -66,11 +66,15 @@ static void MX_USART1_UART_Init(void);
 #define JOYSTICK_MIDVALUE 2048
 #define JOYSTICK_DEADZONE 100
 
+#define TIMEOUT_MS 100	// if no data from bluetooth within 100 ms, shut off
+
 int joyValue1 = JOYSTICK_MIDVALUE;
 int joyValue2 = JOYSTICK_MIDVALUE;
 
 #define MSGLENGTH 11
-uint8_t usartBuf[MSGLENGTH];
+uint8_t usartBuf[MSGLENGTH+1];
+
+uint32_t lastTick = 0;
 
 int uartSyncMode = 0;	// in syncmode we read one byte at a time and search for \n character
 
@@ -99,10 +103,14 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 		{
 			int val1, val2;
 
+			usartBuf[MSGLENGTH] = 0;
+
 			if(sscanf((char*)usartBuf, "%x %x", &val1, &val2) == 2)
 			{
 				joyValue1 = val1 >> 4;
 				joyValue2 = val2 >> 4;
+
+				lastTick = HAL_GetTick();
 			}
 
 			/* Receive MSGLENGTH new bytes */
@@ -217,7 +225,35 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  MotorPWMControl(joyValue1, joyValue2);
+
+	  if((HAL_GetTick() - lastTick) > TIMEOUT_MS)
+	  {
+		  joyValue1 = JOYSTICK_MIDVALUE;
+		  joyValue2 = JOYSTICK_MIDVALUE;
+	  }
+
+	  int speeddiff = (2048 - joyValue1);
+
+	  int val1, val2;
+
+	  val1 = joyValue2 + speeddiff;
+	  val2 = 4096 - (joyValue2 - speeddiff);
+
+	  if(val1 > 4095)
+		  val1 = 4095;
+
+	  if(val1 < 0)
+		  val1 = 0;
+
+	  if(val2 > 4095)
+		  val2 = 4095;
+
+	  if(val2 < 0)
+		  val2 = 0;
+
+	  MotorPWMControl(val1, val2);
+
+	  HAL_Delay(1);
   }
   /* USER CODE END 3 */
 }
@@ -279,7 +315,7 @@ static void MX_TIM4_Init(void)
 
   /* USER CODE END TIM4_Init 1 */
   htim4.Instance = TIM4;
-  htim4.Init.Prescaler = 2;
+  htim4.Init.Prescaler = 0;
   htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim4.Init.Period = 2048;
   htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
