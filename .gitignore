@@ -1,0 +1,5 @@
+Debug/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.o
+*.su
+*.o
+.settings/org.eclipse.cdt.managedbuilder.core.prefs
+.settings/language.settings.xml
