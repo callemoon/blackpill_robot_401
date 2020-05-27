@@ -26,7 +26,7 @@
 // SSD1306 width in pixels
 #define SSD1306_WIDTH           128
 // SSD1306 LCD height in pixels
-#define SSD1306_HEIGHT          64
+#define SSD1306_HEIGHT          32
 
 
 //
