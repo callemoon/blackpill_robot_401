@@ -41,6 +41,8 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+I2C_HandleTypeDef hi2c2;
+
 TIM_HandleTypeDef htim4;
 
 UART_HandleTypeDef huart1;
@@ -54,6 +56,7 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_TIM4_Init(void);
 static void MX_USART1_UART_Init(void);
+static void MX_I2C2_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -62,11 +65,12 @@ static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN 0 */
 #include "string.h"
 #include "stdio.h"
+#include "ssd1306.h"
 
 #define JOYSTICK_MIDVALUE 2048
 #define JOYSTICK_DEADZONE 100
 
-#define TIMEOUT_MS 100	// if no data from bluetooth within 100 ms, shut off
+#define TIMEOUT_MS 100	// if no data from Bluetooth within 100 ms, shut off outputs
 
 int joyValue1 = JOYSTICK_MIDVALUE;
 int joyValue2 = JOYSTICK_MIDVALUE;
@@ -208,6 +212,7 @@ int main(void)
   MX_GPIO_Init();
   MX_TIM4_Init();
   MX_USART1_UART_Init();
+  MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
   uartSyncMode = 1;	// start by receiving byte by byte until we get a end of line character
   HAL_UART_Receive_IT(&huart1, usartBuf, 1);
@@ -216,6 +221,11 @@ int main(void)
   HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_2);
   HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_3);
   HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_4);
+
+  ssd1306_Init();
+  ssd1306_WriteString("David", Font_16x26, White);
+  ssd1306_UpdateScreen();
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -226,6 +236,7 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
+	  /*
 	  if((HAL_GetTick() - lastTick) > TIMEOUT_MS)
 	  {
 		  joyValue1 = JOYSTICK_MIDVALUE;
@@ -250,6 +261,12 @@ int main(void)
 
 	  if(val2 < 0)
 		  val2 = 0;
+		  */
+
+	  int val1, val2;
+
+	  val1 = (JOYSTICK_MIDVALUE- joyValue2) + JOYSTICK_MIDVALUE;
+	  val2 = ((joyValue1 - JOYSTICK_MIDVALUE) * 0.8) + JOYSTICK_MIDVALUE;
 
 	  MotorPWMControl(val1, val2);
 
@@ -294,6 +311,40 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief I2C2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_I2C2_Init(void)
+{
+
+  /* USER CODE BEGIN I2C2_Init 0 */
+
+  /* USER CODE END I2C2_Init 0 */
+
+  /* USER CODE BEGIN I2C2_Init 1 */
+
+  /* USER CODE END I2C2_Init 1 */
+  hi2c2.Instance = I2C2;
+  hi2c2.Init.ClockSpeed = 100000;
+  hi2c2.Init.DutyCycle = I2C_DUTYCYCLE_2;
+  hi2c2.Init.OwnAddress1 = 0;
+  hi2c2.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c2.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  hi2c2.Init.OwnAddress2 = 0;
+  hi2c2.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  hi2c2.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+  if (HAL_I2C_Init(&hi2c2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN I2C2_Init 2 */
+
+  /* USER CODE END I2C2_Init 2 */
+
 }
 
 /**
@@ -399,8 +450,8 @@ static void MX_GPIO_Init(void)
 {
 
   /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
 
 }
 

@@ -3,3 +3,6 @@ Debug/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.o
 *.o
 .settings/org.eclipse.cdt.managedbuilder.core.prefs
 .settings/language.settings.xml
+Debug/blackpill_robot_401.hex
+Debug/blackpill_robot_401.list
+Debug/blackpill_robot_401.map
